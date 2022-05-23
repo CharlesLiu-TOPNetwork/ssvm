@@ -4,6 +4,7 @@ use std::io::{self, Write};
 #[derive(Debug, Clone, Copy)]
 enum Literal {
     Int(i32),
+    Float(f32),
     Str(&'static str),
 }
 
@@ -55,33 +56,46 @@ impl Machine {
                 let pair = (self.pop(), self.pop());
                 self.push(match pair {
                     (Literal::Int(x), Literal::Int(y)) => Literal::Int(x + y),
-                    _ => panic!("error in code-- expected int for binary operations"),
+                    (Literal::Float(x), Literal::Float(y)) => Literal::Float(x + y),
+                    (Literal::Int(x), Literal::Float(y)) => Literal::Float(x as f32 + y),
+                    (Literal::Float(x), Literal::Int(y)) => Literal::Float(x + y as f32),
+                    _ => panic!("error in code-- expected int/float for binary operations"),
                 });
             }
             Instruction::Sub => {
                 let pair = (self.pop(), self.pop());
                 self.push(match pair {
                     (Literal::Int(x), Literal::Int(y)) => Literal::Int(x - y),
-                    _ => panic!("error in code-- expected int for binary operations"),
+                    (Literal::Float(x), Literal::Float(y)) => Literal::Float(x - y),
+                    (Literal::Int(x), Literal::Float(y)) => Literal::Float(x as f32 - y),
+                    (Literal::Float(x), Literal::Int(y)) => Literal::Float(x - y as f32),
+                    _ => panic!("error in code-- expected int/float for binary operations"),
                 });
             }
             Instruction::Mul => {
                 let pair = (self.pop(), self.pop());
                 self.push(match pair {
                     (Literal::Int(x), Literal::Int(y)) => Literal::Int(x * y),
-                    _ => panic!("error in code-- expected int for binary operations"),
+                    (Literal::Float(x), Literal::Float(y)) => Literal::Float(x * y),
+                    (Literal::Int(x), Literal::Float(y)) => Literal::Float(x as f32 * y),
+                    (Literal::Float(x), Literal::Int(y)) => Literal::Float(x * y as f32),
+                    _ => panic!("error in code-- expected int/float for binary operations"),
                 });
             }
             Instruction::Div => {
                 let pair = (self.pop(), self.pop());
                 self.push(match pair {
                     (Literal::Int(x), Literal::Int(y)) => Literal::Int(x / y),
-                    _ => panic!("error in code-- expected int for binary operations"),
+                    (Literal::Float(x), Literal::Float(y)) => Literal::Float(x / y),
+                    (Literal::Int(x), Literal::Float(y)) => Literal::Float(x as f32 / y),
+                    (Literal::Float(x), Literal::Int(y)) => Literal::Float(x / y as f32),
+                    _ => panic!("error in code-- expected int/float for binary operations"),
                 });
             }
             Instruction::Display => {
                 match self.pop() {
                     Literal::Int(x) => print!("{:?}", x),
+                    Literal::Float(x) => print!("{:?}", x),
                     Literal::Str(x) => print!("{}", x),
                 }
                 io::stdout().flush().unwrap();
@@ -93,7 +107,7 @@ impl Machine {
 fn main() {
     let mut machine = Machine::new(vec![
         Instruction::Push(Literal::Int(2)),
-        Instruction::Push(Literal::Int(1)),
+        Instruction::Push(Literal::Float(1.)),
         Instruction::Add,
         Instruction::Push(Literal::Str("1 + 2 is ")),
         Instruction::Display,
