@@ -10,6 +10,9 @@ enum Literal {
 #[derive(Debug, Clone, Copy)]
 enum Instruction {
     Add,
+    Sub,
+    Mul,
+    Div,
     Push(Literal),
     Display,
 }
@@ -55,7 +58,27 @@ impl Machine {
                     _ => panic!("error in code-- expected int for binary operations"),
                 });
             }
-
+            Instruction::Sub => {
+                let pair = (self.pop(), self.pop());
+                self.push(match pair {
+                    (Literal::Int(x), Literal::Int(y)) => Literal::Int(x - y),
+                    _ => panic!("error in code-- expected int for binary operations"),
+                });
+            }
+            Instruction::Mul => {
+                let pair = (self.pop(), self.pop());
+                self.push(match pair {
+                    (Literal::Int(x), Literal::Int(y)) => Literal::Int(x * y),
+                    _ => panic!("error in code-- expected int for binary operations"),
+                });
+            }
+            Instruction::Div => {
+                let pair = (self.pop(), self.pop());
+                self.push(match pair {
+                    (Literal::Int(x), Literal::Int(y)) => Literal::Int(x / y),
+                    _ => panic!("error in code-- expected int for binary operations"),
+                });
+            }
             Instruction::Display => {
                 match self.pop() {
                     Literal::Int(x) => print!("{:?}", x),
