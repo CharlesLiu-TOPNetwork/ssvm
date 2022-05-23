@@ -1,5 +1,8 @@
 #![allow(unused)]
-use std::io::{self, Write};
+use std::{
+    collections::HashMap,
+    io::{self, Write},
+};
 
 #[derive(Debug, Clone, Copy)]
 enum Literal {
@@ -16,12 +19,15 @@ enum Instruction {
     Div,
     Push(Literal),
     Display,
+    Mstore((u32)),
+    Mload((u32)),
 }
 
 struct Machine {
     stack: Vec<Literal>,
     code: Vec<Instruction>,
     pc: usize,
+    mem: HashMap<u32, Literal>,
 }
 
 impl Machine {
@@ -30,6 +36,7 @@ impl Machine {
             stack: Vec::new(),
             code,
             pc: 0,
+            mem: HashMap::new(),
         }
     }
 
@@ -47,6 +54,14 @@ impl Machine {
             self.pc += 1;
             self.dispatch(opcode);
         }
+    }
+
+    fn mem_store(&mut self, addr: u32, value: Literal) {
+        self.mem.insert(addr, value);
+    }
+
+    fn mem_load(&mut self, addr: &u32) -> Option<&Literal> {
+        self.mem.get(addr)
     }
 
     fn dispatch(&mut self, opcode: Instruction) {
@@ -100,6 +115,14 @@ impl Machine {
                 }
                 io::stdout().flush().unwrap();
             }
+            Instruction::Mstore(addr) => {
+                let value = self.pop();
+                self.mem_store(addr, value);
+            }
+            Instruction::Mload(addr) => {
+                let value = self.mem_load(&addr).unwrap().clone(); // todo error in code;
+                self.push(value);
+            }
         };
     }
 }
@@ -109,8 +132,11 @@ fn main() {
         Instruction::Push(Literal::Int(2)),
         Instruction::Push(Literal::Float(1.)),
         Instruction::Add,
+        Instruction::Mstore(666),
+        // ....
         Instruction::Push(Literal::Str("1 + 2 is ")),
         Instruction::Display,
+        Instruction::Mload(666),
         Instruction::Display,
         Instruction::Push(Literal::Str("\n")),
         Instruction::Display,
